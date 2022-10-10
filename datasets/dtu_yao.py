@@ -142,10 +142,6 @@ class MVSDataset(Dataset):
         imgs_2 = []
         imgs_3 = []
 
-        edges_0 = []
-        edges_1 = []
-        edges_2 = []
-        edges_3 = []
 
         mask = None
         depth = None
@@ -161,8 +157,7 @@ class MVSDataset(Dataset):
             # NOTE that the id in image file names is from 1 to 49 (not 0~48)
             img_filename = os.path.join(self.datapath,
                                         'Rectified/{}_train/rect_{:0>3}_{}_r5000.png'.format(scan, vid + 1, light_idx))
-            edge_filename = os.path.join(self.datapath,
-                                         'Edge_maps/{}_train/rect_{:0>3}_{}_r5000.png'.format(scan, vid + 1, light_idx))
+
             mask_filename_hr = os.path.join(self.datapath, 'Depths_raw/{}/depth_visual_{:0>4}.png'.format(scan, vid))
             depth_filename_hr = os.path.join(self.datapath, 'Depths_raw/{}/depth_map_{:0>4}.pfm'.format(scan, vid))
             proj_mat_filename = os.path.join(self.datapath, 'Cameras_1/train/{:0>8}_cam.txt').format(vid)
@@ -173,11 +168,7 @@ class MVSDataset(Dataset):
             imgs_2.append(imgs['stage_2'])
             imgs_3.append(imgs['stage_3'])
 
-            edges = self.read_img(edge_filename)
-            edges_0.append(edges['stage_0'])
-            edges_1.append(edges['stage_1'])
-            edges_2.append(edges['stage_2'])
-            edges_3.append(edges['stage_3'])
+
 
             # here, the intrinsics from file is already adjusted to the downsampled size of feature 1/4H0 * 1/4W0
             intrinsics, extrinsics, depth_min_, depth_max_ = self.read_cam_file(proj_mat_filename)
@@ -226,17 +217,6 @@ class MVSDataset(Dataset):
         imgs['stage_2'] = imgs_2
         imgs['stage_3'] = imgs_3
 
-        # edges: N*1*H0*W0, N is number of images
-        edges_0 = np.stack(edges_0).transpose([0, 1, 2])
-        edges_1 = np.stack(edges_1).transpose([0, 1, 2])
-        edges_2 = np.stack(edges_2).transpose([0, 1, 2])
-        edges_3 = np.stack(edges_3).transpose([0, 1, 2])
-
-        edges = {}
-        edges['stage_0'] = edges_0
-        edges['stage_1'] = edges_1
-        edges['stage_2'] = edges_2
-        edges['stage_3'] = edges_3
 
         # proj_matrices: N*4*4
         proj_matrices_0 = np.stack(proj_matrices_0)
@@ -252,7 +232,6 @@ class MVSDataset(Dataset):
 
         # data is numpy array
         return {"imgs": imgs,  # N*3*H0*W0
-                "edges": edges,
                 "proj_matrices": proj,  # N*4*4
                 "depth": depth,  # 1*H0 * W0
                 "depth_min": depth_min,  # scalar

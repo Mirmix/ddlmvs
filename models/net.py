@@ -121,7 +121,6 @@ class Refinement(nn.Module):
         )
 
         self.mlpconvOut = nn.Conv2d(32, 6, 1)
-        # self.edgeconvOut = nn.Conv2d(32, 1, 1)
         self.activationTanh = nn.Tanh()
         self.activationSigmoid = nn.Sigmoid()
 
@@ -180,12 +179,10 @@ class Refinement(nn.Module):
         final_edge = self.activationSigmoid(torch.unsqueeze(feature[:, 5, :], 1))
 
         self.pi1 = 1. - self.pi0
-        # self.confmap = self.activationSigmoid(torch.unsqueeze(feature[:, 5, :], 1))
 
 
         # Mode with the highest density value as final prediction
         u_mask = (self.pi0 / self.sigma0 > self.pi1 / self.sigma1).float()
-        #conf_mask = (self.confmap > 0.5).float()
 
         res = self.mu0 * u_mask + self.mu1 * (1. - u_mask)
         depth_interpolated = F.interpolate(depth, scale_factor=2, mode="nearest")
@@ -486,6 +483,7 @@ def DDLMVS_loss(
     Laplacian0 = 0.5 * pi[mask_l]     * torch.exp(-(torch.abs(mu0[mask_l]-depth2)/sigma0[mask_l]))/sigma0[mask_l]
     Laplacian1 = 0.5 * (1-pi[mask_l]) * torch.exp(-(torch.abs(mu1[mask_l]-depth2)/sigma1[mask_l]))/sigma1[mask_l]
     ####Bimodal loss negative log likelihood of the weighted laplacians
+
     BIMODAL_LOSS = -1.* torch.log(Laplacian0 + Laplacian1+eps)
     BIMODAL_LOSS = BIMODAL_LOSS.sum()/len(depth1)
     loss = 2*loss  +TV2LOSS +EDGEL2SIM + BIMODAL_LOSS

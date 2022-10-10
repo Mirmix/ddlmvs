@@ -206,7 +206,6 @@ def train_sample(sample, detailed_summary=False):
 
     sample_cuda = tocuda(sample)
     depth_gt = sample_cuda["depth"]
-    edges = sample_cuda["edges"]
     mask = sample_cuda["mask"]
 
     outputs = model(sample_cuda["imgs"], sample_cuda["proj_matrices"],
@@ -233,7 +232,6 @@ def train_sample(sample, detailed_summary=False):
                     "depth_patchmatch_stage_2": depth_patchmatch['stage_2'][-1] * mask['stage_2'],
                     "depth_patchmatch_stage_3": depth_patchmatch['stage_3'][-1] * mask['stage_3'],
                     "refined_edge": edge_est['stage_0'],
-                    "initial_edge": edges['stage_0'][:, 0],
                      "ref_img": sample["imgs"]['stage_0'][:, 0],
                      "pseudo_pi": pseudo_pi,
                      "pi": (pi>0.5).float()
@@ -270,7 +268,6 @@ def test_sample(sample, detailed_summary=True):
     model.eval()
     sample_cuda = tocuda(sample)
     depth_gt = sample_cuda["depth"]
-    edges = sample_cuda["edges"]
     mask = sample_cuda["mask"]
 
     outputs = model(sample_cuda["imgs"],sample_cuda["proj_matrices"],
@@ -294,7 +291,6 @@ def test_sample(sample, detailed_summary=True):
                     "depth_patchmatch_stage_1": depth_patchmatch['stage_1'][-1] * mask['stage_1'],
                     "depth_patchmatch_stage_2": depth_patchmatch['stage_2'][-1] * mask['stage_2'],
                     "depth_patchmatch_stage_3": depth_patchmatch['stage_3'][-1] * mask['stage_3'],
-                     "initial_edge": edges['stage_0'][:, 0],
                      "refined_edge": edge_est['stage_0'],
                      "ref_img": sample["imgs"]['stage_0'][:, 0],
                      "pseudo_pi": pseudo_pi,
