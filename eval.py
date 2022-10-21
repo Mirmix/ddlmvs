@@ -145,23 +145,14 @@ def save_depth():
                                                                 outputs["photometric_confidence"],outputs["refined_edge"]['stage_0']):
                 depth_filename = os.path.join(args.outdir, filename.format('depth_est', '.pfm'))
                 confidence_filename = os.path.join(args.outdir, filename.format('confidence', '.pfm'))
-                edge_filename = os.path.join(args.outdir, filename.format('edge', '.png'))
 
                 os.makedirs(depth_filename.rsplit('/', 1)[0], exist_ok=True)
                 os.makedirs(confidence_filename.rsplit('/', 1)[0], exist_ok=True)
-                os.makedirs(edge_filename.rsplit('/', 1)[0], exist_ok=True)
                 # save depth maps
                 depth_est = np.squeeze(depth_est, 0)
                 save_pfm(depth_filename, depth_est)
                 # save confidence maps
                 save_pfm(confidence_filename, photometric_confidence)
-                # save edge
-                refined_edge = np.moveaxis(refined_edge, 0, 2)
-                refined_edge2 = np.array(refined_edge)
-                refined_edge2=cv2.normalize(refined_edge,refined_edge2, 0, 255, cv2.NORM_MINMAX)
-                cv2.imwrite(edge_filename,refined_edge2)
-                #cv2.imwrite(edge_filename,refined_edge*255)
-
 
 
 

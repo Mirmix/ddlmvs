@@ -83,11 +83,6 @@ class Refinement(nn.Module):
         self.conv0 = ConvBnReLU(in_channels=3, out_channels=8)
 
 
-        # edge: [B,1,H,W]
-        self.edgeconv0 = ConvBnReLU(in_channels=1, out_channels=8)
-        self.edgeconv1 = ConvBnReLU(in_channels=8, out_channels=8)
-
-
         # depth map:[B,1,H/2,W/2]
         self.conv1 = ConvBnReLU(in_channels=1, out_channels=8)
         self.conv2 = ConvBnReLU(in_channels=8, out_channels=8)
@@ -199,8 +194,6 @@ class Refinement(nn.Module):
         self.mu1 = self.mu1 * (
                 depth_max.view(batch_size, 1, 1, 1) - depth_min.view(batch_size, 1, 1, 1)) + depth_min.view(
             batch_size, 1, 1, 1)
-        #final_edge = edge+self.delta_edge
-        # depth = conf_mask * depth
 
         return depth,final_edge,u_mask,self.pi0,self.mu0,self.mu1,self.sigma0,self.sigma1
 
