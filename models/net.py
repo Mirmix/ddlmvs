@@ -423,19 +423,25 @@ def DDLMVS_loss(
         sigma0: Dict[str, torch.Tensor],
         sigma1: Dict[str, torch.Tensor]
 ) -> torch.Tensor:
-    """Patchmatch Net loss function
+    """DDLMVS loss function
 
     Args:
-        depth_patchmatch: depth map predicted by patchmatch net
-        refined_depth: refined depth map predicted by patchmatch net
+        depth_patchmatch: depth map predicted by ddlmvs
+        refined_depth: refined depth map predicted by ddlmvs
+        edges_est: edge map predicted by ddlmvs
         depth_gt: ground truth depth map
         mask: mask for filter valid points
+        pi: pi map predicted by ddlmvs
+        mu0: mu0 map predicted by ddlmvs
+        mu1: mu1 map predicted by ddlmvs
+        sigma0: sigma0 map predicted by ddlmvs
+        sigma1: sigma1 map predicted by ddlmvs
 
     Returns:
         loss: result loss value
     """
     stage = 4
-
+    # depth loss
     loss = 0
     for l in range(1, stage):
         depth_gt_l = depth_gt[f"stage_{l}"]
@@ -456,6 +462,7 @@ def DDLMVS_loss(
     loss = loss + F.smooth_l1_loss(depth1, depth2, reduction="mean")
     main_loss = loss
 
+    # edge smoothness loss
     laplacian_depthy = torch.abs(2*refined_depth[f'stage_{l}'][:,:,1:-1,:] - refined_depth[f'stage_{l}'][:,:,:-2,:] - refined_depth[f'stage_{l}'][:,:,2:,:])
     laplacian_depthx = torch.abs(2*refined_depth[f'stage_{l}'][:,:,:,1:-1] - refined_depth[f'stage_{l}'][:,:,:,:-2] - refined_depth[f'stage_{l}'][:,:,:,2:])
 
@@ -471,14 +478,17 @@ def DDLMVS_loss(
     EDGEL2SIM = 8* F.smooth_l1_loss(depths_GRAD, edges_est[f'stage_{l}'], reduction="mean") #5 12 oct
     TV2LOSS = 2.5*(tv_h+tv_w)/len(depth1) # 2500
 
-    eps = 1e-5
+
     #Bimodal loss
+    eps = 1e-5
     Laplacian0 = 0.5 * pi[mask_l]     * torch.exp(-(torch.abs(mu0[mask_l]-depth2)/sigma0[mask_l]))/sigma0[mask_l]
     Laplacian1 = 0.5 * (1-pi[mask_l]) * torch.exp(-(torch.abs(mu1[mask_l]-depth2)/sigma1[mask_l]))/sigma1[mask_l]
     ####Bimodal loss negative log likelihood of the weighted laplacians
 
     BIMODAL_LOSS = -1.* torch.log(Laplacian0 + Laplacian1+eps)
     BIMODAL_LOSS = BIMODAL_LOSS.sum()/len(depth1)
+
+    # total loss
     loss = 2*loss  +TV2LOSS +EDGEL2SIM + BIMODAL_LOSS
 
     print("TOTAL LOSS ",loss," MAIN LOSS ",main_loss," EDGEL2SIM ",EDGEL2SIM, " TV2LOSS ",TV2LOSS," BIMODAL_LOSS ",BIMODAL_LOSS)
